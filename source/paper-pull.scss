@@ -1,0 +1,149 @@
+:host {
+	// structure
+	display: block;
+
+	// appearance
+	font-family: 'Wire One', serif;
+
+	&::content {
+		// base
+		ul, li, figure, h2, h3, p, figure{
+			margin: 0;
+			padding: 0;
+			list-style: none;
+			font-weight: normal
+		}
+
+		// builded wrap
+		.paper-pull--builded--wrap {
+			margin: auto
+		}
+
+		// builded list
+		.paper-pull--builded--list {
+			// structure
+			position: relative;
+		}
+
+		// builded cell
+		.paper-pull--builded--cell {
+			// structure
+			position: absolute;
+
+			// appearance
+			background: #fff;
+			box-shadow: 0px 0px 8px 0px rgba(28,45,206,0.6);
+			border-radius: 2px;
+			overflow: hidden;
+
+			// anim
+			transition: all .5s ease-out
+		}
+
+		// builded article
+		.paper-pull--builded--article {
+		}
+
+		// hover class
+		.paper-pull--hover {
+			cursor: pointer
+		}
+
+		// inner elements
+		// 1. header
+		.paper-pull--short--header {
+			// structure
+			width: 100%;
+			padding: 10px;
+
+			// appearance
+			box-sizing: border-box;
+		}
+
+		// 1.1 title
+		.paper-pull--short--title {
+			// appearance
+			font-family: 'Josefin Slab', serif;
+		}
+
+		// 2. short description
+		.paper-pull--short--description {
+			// structure
+			width: 100%;
+			position: absolute;
+			padding: 10px;
+
+			// position
+			bottom: 0;
+			z-index: 10;
+
+			// appearance
+			box-sizing: border-box;
+			color: #fff
+		}
+
+		// pins types
+		// 1. picture
+		.paper-pull--type--picture--wrap {
+			// structure
+			position: relative;
+
+			// black overlay
+			&:after {
+				// structure
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				top: 0;
+				left: 0;
+
+				// appearance
+				content: '';
+				background: linear-gradient(to bottom,transparent 30%,rgba(0,0,0,.75) 96%,rgba(0,0,0,.67) 100%);
+
+				// transition
+				transition: background .3s linear;
+
+			}
+
+			// abs header
+			.paper-pull--short--header {
+				// strucutre
+				position: absolute;
+
+				// position
+				top: 50%;
+				z-index: 10;
+
+				// transform;
+				transform: translate3d(0, -50%, 0);
+
+				* {
+					// appearance
+					color: #fff;
+					text-align: center;
+				}
+			}
+
+			// hover handle
+			&.paper-pull--hover {
+				&:hover {
+					img {
+						transform: translate3d(0, -20%, 0)
+					}
+				}
+			}
+
+			img {
+				// structure
+				display: block;
+				width: 100%;
+
+				// transition
+				transition: transform .3s ease-out
+				// -webkit-filter: sepia(1);
+				// filter: sepia(1);
+			}
+		}
+	}
+}
