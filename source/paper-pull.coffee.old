@@ -1,0 +1,600 @@
+Polymer
+	is: 'paper-pull'
+
+	behaviors: [
+		Polymer.IronResizableBehavior
+	]
+
+	listeners:
+		'iron-resize': '_onResize'
+
+	#------------------
+	# ---- all get fn
+	# -----------------
+	_get_windowWidth: ->
+		# get value
+		winWidth = window.innerWidth
+
+		return winWidth
+
+	# get custom wrapper width
+	_get_allAttributes: (obj) ->
+		# set vars
+		attrs = obj.attributes
+
+		return attrs
+
+	# get all attributes values
+	_get_allValues: (obj)->
+		# set vars
+		node = ''
+		value = ''
+		temp = {}
+
+		# parse array
+		for attr, index in obj
+
+			# get attribute name && attribute value
+			node = attr.nodeName
+			value = attr.nodeValue
+
+			# set temp array
+			temp[node] = value
+
+		return temp
+
+	_get_wrapWidth: ->
+		# set vars
+		component = this
+
+		# get attribute
+		mainWidth = component.getAttribute('wrapwidth')
+
+		if mainWidth != null and mainWidth != undefined
+			mainWidth = mainWidth
+		else
+			mainWidth = @_get_windowWidth()
+
+		return parseFloat mainWidth
+
+	# get all pins elements
+	_get_pins: ->
+		# set vars
+		component = this
+
+		# get pins elements
+		pull = component.querySelector('.paper-pull-wrap')
+		pins = pull.getElementsByTagName('*')
+
+		return pins
+
+	# get pin typology
+	_get_pinType: (pin, index, title, claim, desc) ->
+		# set vars
+		component = this
+		tagName = pin.tagName
+
+		return @_set_pinType(pin, tagName, index, title, claim, desc)
+
+	# get how many pins for column
+	_get_pinForColumn: ->
+		# set vars
+		component = this
+
+		# get attribute
+		pinForColumn = component.getAttribute('pinforcolumn')
+
+		return parseFloat pinForColumn
+
+	# get custom pin width
+	_get_pinWidth: ->
+		# set vars
+		component = this
+
+		# get attribute
+		pinWidth = component.getAttribute('pinwidth')
+
+		return parseFloat pinWidth
+
+	# get custom pin margin
+	_get_pinMargin: ->
+		# set vars
+		component = this
+
+		# get attribute
+		pinMargin = component.getAttribute('pinspace')
+
+		if pinMargin != null and pinMargin != undefined
+			pinMargin = pinMargin
+		else
+			pinMargin = 0
+
+		return parseFloat pinMargin
+
+	# get column number
+	_get_pinColumn: ->
+		# set vars
+		component = this
+		wrap = component.querySelector('.paper-pull--builded--wrap')
+
+		# get real wrap width
+		wrapWidth = wrap.clientWidth
+
+		# get center mode attr
+		centeredMode = component.getAttribute('centered')
+
+		# set coloumn
+		if centeredMode != null and centeredMode != undefined and centeredMode != 'false'
+			count = Math.floor(wrapWidth / (@_get_pinWidth() + @_get_pinMargin() * 2))
+		else
+			count = Math.floor(wrapWidth / (@_get_pinWidth() + @_get_pinMargin()))
+
+		return parseFloat count
+
+	# get tag to replace
+	_get_tag_toReplace: (pin) ->
+		# get custom tag type
+		tagName = pin.tagName.toLowerCase()
+
+		# call: replace_tag
+		return @_replace_tag(tagName)
+
+	# get property exist
+	_get_propertyExist: (array, prop) ->
+
+		return array.hasOwnProperty(prop)
+
+	# get single attribute
+	_get_singleAttr: (index, attr) ->
+		# set vars
+		attrs = @_set_pinsArray(@_get_pins())
+
+		# get param
+		parameter = attrs[index][attr]
+
+		return parameter
+
+	# get index of element in array
+	_get_indexInArray: (elem, array) ->
+		# set vars
+		length = array.length
+
+		# parse array
+		for el, index in array
+
+			# check if elem == array[i]
+			if elem == parseFloat el
+				# return index value
+				return index
+
+		return false
+
+	# get min value of element in array
+	_get_minValueInArray: (array) ->
+  		Math.min.apply Math, array
+
+  	# get left position to set
+  	_get_pinLeftPosition: (index, spaceLeft) ->
+  		# set vars
+  		left = (@_get_pinMargin() + (index * (@_get_pinWidth() + @_get_pinMargin()))) + spaceLeft
+
+  		return left
+
+	#------------------
+	# ---- all set fn
+	#------------------
+
+	# set custom wrap main property
+	_set_wrapArray: ->
+		# set vars
+		component = this
+		attrs = @_get_allAttributes(component)
+		node = ''
+		value = ''
+		temp = {}
+		main = []
+
+		# fill main array
+		main.push @_get_allValues(attrs)
+
+		# empty array
+		tamp = {}
+
+		return main
+
+	# set custom pin property
+	_set_pinsArray: (array) ->
+		# set vars
+		node = ''
+		value = ''
+		temp = {}
+		pins = []
+
+		# set array
+		for pin, index in array
+			# get all attribute
+			attrs = @_get_allAttributes(pin)
+
+			# fill pins array
+			pins.push @_get_allValues(attrs)
+
+		return pins
+
+	# set pin width
+	_set_pinWidth: (pin) ->
+		pin.style.width = @_get_pinWidth() + 'px'
+
+	# set pin configuration for the new positions
+	_set_pinConfPosition: ->
+		# set vars
+		component = this
+		cell = component.querySelectorAll('.paper-pull--builded--cell')
+		pinMarginArray = []
+
+		# get column number
+		count = @_get_pinColumn()
+
+		# add item to array
+		for c, index in cell
+			if index < count
+				pinMarginArray.push @_get_pinMargin()
+
+		# call: set_pinNewPosition
+		@_set_pinNewPosition(pinMarginArray)
+
+	# set pins position
+	_set_pinNewPosition : (array) ->
+		# set vars
+		component = this
+		cell = component.querySelectorAll('.paper-pull--builded--cell')
+		wrap = @.querySelector('.paper-pull--builded--wrap')
+
+		# get real wrap width
+		wrapWidth = wrap.clientWidth
+
+		# get center mode attr
+		centeredMode = component.getAttribute('centered')
+
+		# set var spaceLeft
+		if centeredMode != null and centeredMode != undefined and centeredMode != 'false'
+			spaceLeft = (wrapWidth - (( @_get_pinWidth() * @_get_pinColumn() ) + ( @_get_pinMargin() * ( @_get_pinColumn() - 1 )))) / 2;
+		else
+			spaceLeft = 0
+
+		# set column size
+		count = @_get_pinColumn()
+
+		for c in cell
+			# get element height
+			height = c.clientHeight
+
+			# get min array value
+			min = @_get_minValueInArray(array)
+
+			# get index of min array value
+			index = @_get_indexInArray(min, array)
+
+			# set new left + new top position
+			c.style.left = @_get_pinLeftPosition(index, spaceLeft) + 'px'
+			c.style.top = min + 'px'
+
+			array[index] = min + height + @_get_pinMargin()
+
+	# set tag typology
+	_set_pinType: (pin, attr, index, title, claim, desc) ->
+		# check typology and build case
+		switch attr.toLowerCase()
+  			when 'picture'
+  				tag = @_build_image(pin, index, title, claim, desc)
+  			when 'youtube'
+  				tag = @_build_youtube(pin, index, title, claim, desc)
+  			else
+  				tag = @_build_default(pin, index, title, claim, desc)
+  		return tag
+
+	#------------------
+	# ---- all build fn
+	# -----------------
+
+	# build wrapper
+	_build_wrapper: ->
+		# set vars
+		component = this
+		wrapAttr = @_set_wrapArray()
+		width = wrapAttr[0].wrapwidth
+		pins = @_get_pins()
+		pinsMarginArray = []
+		length = pins.length
+
+		# create wrap
+		wrapper = document.createElement('section')
+		wrapper.setAttribute('class', 'paper-pull--builded--wrap')
+
+		# add custom max-width
+		wrapper.style.maxWidth = width + 'px'
+
+		# create pins wrap
+		pinsList = document.createElement('ul')
+		pinsList.setAttribute('class', 'paper-pull--builded--list')
+
+		# append list to wrapper
+		wrapper.appendChild(pinsList)
+
+		# add pins to wrapper
+		for pin, index in pins
+			# set vars
+			type = pin.tagName.toLowerCase()
+
+			# create pin cell
+			pinsCell = document.createElement('li')
+			pinsCell.setAttribute('class', 'paper-pull--builded--cell')
+			#pinsCell.style.width = @_get_pinWidth() + 'px'
+			@_set_pinWidth(pinsCell)
+
+			# append cell to list
+			pinsList.appendChild(pinsCell)
+
+			# create pin article
+			pinsArticle = document.createElement('article')
+			pinsArticle.setAttribute('class', 'paper-pull--builded--article')
+			pinsArticle.setAttribute('class', 'paper-pull--type--' + type)
+			pinsArticle.setAttribute('role', 'contentinfo')
+			pinsArticle.setAttribute('aria-label', 'article')
+
+			# append article to cell
+			pinsCell.appendChild(pinsArticle)
+
+			# create inner custom tag
+			pinsArticle.appendChild(@_build_customTag(index, pin))
+
+			# set class when all pins are loaded
+			if index == (pins.length - 1)
+				component.setAttribute('class', 'loaded')
+
+		# append wrapper to component
+		component.appendChild(wrapper)
+
+	# build custom structure
+	_build_customTag: (index, pin, attrs) ->
+		# set vars
+		component = this
+		attrs = @_set_pinsArray(@_get_pins())
+		parameters = attrs[index]
+
+		# get builded custom tag
+		type = @_get_pinType(pin, index, @_get_propertyExist(parameters, 'title'), @_get_propertyExist(parameters, 'claim'), @_get_propertyExist(parameters, 'description'))
+
+		# set user attribute
+		# aria labelledby
+		if(@_get_propertyExist(parameters, 'aria-labelledby'))
+			type.setAttribute('aria-labelledby', parameters['aria-labelledby'])
+
+		return type
+
+	# custom cases :
+	# 1.default
+	_build_default: (pin, index, title, claim, desc) ->
+		# create custom tag (default case)
+		tag = document.createElement('div')
+		tag. setAttribute('class', 'paper-pull--type--defaul--wrap')
+
+		# check if title or claim exist to
+		# build an header tag
+		if title || claim
+			header = document.createElement('header')
+			header.setAttribute('class', 'paper-pull--short--header')
+
+			# check if title exist
+			# add title wrap
+			if title
+				# add title to tag
+				header.appendChild(@_build_contentElements('h2', index, 'title'))
+				@_remove_attributes(pin, 'title')
+
+			# check if claim exist
+			# add claim wrap
+			if claim
+				# add claim to tag
+				header.appendChild(@_build_contentElements('h3', index, 'claim'))
+				@_remove_attributes(pin, 'claim')
+
+			# add header
+			tag.appendChild(header)
+
+		# call: build_content
+		@_build_content(tag, pin, index)
+
+		return tag
+
+	# 2.image
+	_build_image: (pin, index, title, claim, desc) ->
+		# create custom tag (image case)
+		tag = document.createElement('figure')
+		tag.setAttribute('class', 'paper-pull--type--picture--wrap')
+
+		# check if title or claim exist to
+		# build an header tag
+		if title || claim
+			header = document.createElement('header')
+			header.setAttribute('class', 'paper-pull--short--header')
+
+			# check if title exist
+			# add title wrap
+			if title
+				# add title to tag
+				header.appendChild(@_build_contentElements('h2', index, 'title'))
+
+				# remove attr from tag
+				@_remove_attributes(pin, 'title')
+
+			# check if claim exist
+			# add claim wrap
+			if claim
+				# add claim to tag
+				header.appendChild(@_build_contentElements('h3', index, 'claim'))
+
+				# remove attr from tag
+				@_remove_attributes(pin, 'claim')
+
+			# add header
+			tag.appendChild(header)
+
+		# check if short description exist
+		# add short description wrap
+		if desc
+			tag.appendChild(@_build_contentElements('figcaption', index, 'description'))
+			tag.setAttribute('class', 'paper-pull--type--picture--wrap paper-pull--hover')
+
+			# remove attr from tag
+			@_remove_attributes(pin, 'description')
+
+		# call: build_content
+		@_build_content(tag, pin, index)
+
+		return tag
+
+	# 3.youtube
+	_build_youtube: (pin, index, title, claim, desc) ->
+		# set var
+		url = @_get_singleAttr(index, 'video')
+		newUrl = url.replace('/watch?v=', '/embed/')
+
+		# remove attr from tag
+		@_remove_attributes(pin, 'video')
+
+		# check url type
+		if url.indexOf('youtube.com/watch?v=') > -1
+			src = newUrl + '?autoplay=0'
+		else
+			src = url + '?autoplay=0'
+
+		# create custom tag (youtube case)
+		tag = document.createElement('iframe')
+		tag. setAttribute('class', 'paper-pull--type--iframe--wrap')
+		tag.setAttribute('frameborder', '0')
+		tag.setAttribute('allowfullscreen', '')
+		tag.setAttribute('src', src)
+
+		@_build_content(tag, pin, index)
+
+		return tag
+
+	# build content elments + add class + innerHTML
+	_build_contentElements: (tag, index, type) ->
+		elem = document.createElement(tag)
+		elem.setAttribute('class', 'paper-pull--short--' + type)
+		elem.innerHTML = @_get_singleAttr(index, type)
+
+		return elem
+
+	# fill custom strucuture
+	_build_content: (customTag, pin, index) ->
+		# set vars
+		component = @
+		attrs = @_set_pinsArray(@_get_pins())
+		parameters = attrs[index]
+		descriptionBool = true
+		customTagType = customTag.tagName.toLowerCase()
+		pinType = pin.tagName.toLowerCase()
+
+		# create new tag
+		tag = document.createElement(@_get_tag_toReplace(pin))
+
+		# get parameters
+		Object.getOwnPropertyNames(parameters).forEach (val, idx, array) ->
+			prop = val
+
+			# set attribute to replaced tag
+			value = parameters[val]
+			tag.setAttribute(prop, value)
+
+
+		# asynchronous load image
+		if pinType == 'picture'
+			# set vars
+			newImg = new Image()
+
+			# crete load event
+			newImg.onload = ->
+				tag.src = this.src
+
+				# set pins position
+				component._set_pinConfPosition()
+
+			# set dynamic source
+			newImg.src = @_get_singleAttr(index, 'src')
+
+		# insert content pin in custom tag
+		customTag.insertBefore(tag, customTag.childNodes[0])
+
+		# call: remove_attributes()
+		@_remove_attributes(tag, 'aria-labelledby')
+
+	#------------------
+	# ---- all replace fn
+	# -----------------
+
+	_replace_tag: (toReplace) ->
+		# check tag to replace
+		switch toReplace
+  			when 'picture'
+  				newTag = 'img'
+
+  			when 'default'
+  				newTag = 'p'
+
+  		return newTag
+
+	#------------------
+	# ---- all remove fn
+	# -----------------
+
+	_remove_customTag: (pin) ->
+		# remove user custom tag
+		pin.parentNode.removeChild(pin);
+
+	_remove_attributes: (pin, attr) ->
+		# set vars
+		component = this
+
+		if attr == 'all'
+			attrs = @_get_allAttributes(pin)
+			values = @_get_allValues(attrs)
+
+			# get parameters
+			Object.getOwnPropertyNames(values).forEach (val, idx, array) ->
+				prop = val
+
+				# remove all aria- attribute
+				if prop.indexOf('aria-') >= 0
+					component._remove_attributes(pin, prop)
+		else
+			# remove chooses attributes
+			pin.removeAttribute(attr)
+
+	# -----------------
+	# ---- all events
+	# -----------------
+
+	attached: ->
+		@_get_pins()
+		@_build_wrapper()
+		#@_test()
+
+	ready: ->
+
+	_onLoad: ->
+
+	_onResize: ->
+		# set vars
+		component = this
+		if component.classList.contains('loaded')
+			@_set_pinConfPosition()
+
+	#------------------
+	# ---- test
+	# -----------------
+	_test : ->
+		component = this
+		console.log(@_set_pinsArray(@_get_pins()))
+

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Paper-carousel demo</title>
+    <link rel="import" href="../paper-pull.html">
+    <link href="https://fonts.googleapis.com/css?family=Josefin+Slab:300,400,600,700|Wire+One" rel="stylesheet">
+    <style>
+	 	body[unresolved] { opacity: 0; }
+	</style>
+  </head>
+  <body unresolved>
+    <div class="content">
+      <!-- COMPONENT -->
+      <paper-pull wrapwidth = '1024'  pinwidth = '300' pinspace = '10' centered = true>
+        <div class="paper-pull-wrap">
+          <picture
+            src = "img/photo1.jpg"
+            alt = 'alt image 1'
+            title = 'Title'
+            claim = 'claim'
+            description = 'short description'
+            aria-labelledby ='caption aria'>
+
+          <picture
+            src = "img/photo2.jpg"
+            alt = 'alt image 2'
+            aria-labelledby ='caption aria'>
+
+          <!-- <youtube
+            video = 'https://www.youtube.com/watch?v=4DiJT-RWa7g'
+            aria-labelledby ='caption aria'> -->
+
+          <picture
+            src = "img/photo3.jpg"
+            alt = 'alt image 2'
+            description = 'short description short description short description short description short description short description short description short description'
+            aria-labelledby ='caption aria'>
+
+          <picture
+            src = "img/photo4.jpg"
+            alt = 'alt image 2'
+            claim = 'claim'
+            aria-labelledby ='caption aria'>
+
+          <picture
+            src = "img/photo5.jpg"
+            alt = 'alt image 2'
+            title = 'Title'
+            description = 'short description short description short description short description short description short description short description short description'
+            aria-labelledby ='caption aria'>
+
+          <!-- <youtube
+            video = 'https://www.youtube.com/watch?v=LMWtioD8V8I'
+            aria-labelledby ='caption aria'> -->
+
+          <picture
+            src = "img/photo6.jpg"
+            alt = 'alt image 2'
+            aria-labelledby ='caption aria'>
+      </paper-pull>
+
+    </div>
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  </body>
+</html>
