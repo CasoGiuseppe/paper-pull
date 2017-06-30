@@ -28,6 +28,15 @@ Polymer
 
 		return pins
 
+	_get_pin: (index) ->
+		# get pins
+		pins = @_get_pins()
+
+		# get pin by index
+		pin = pins[index]
+
+		return pin
+
 	_get_allAttributes: (obj) ->
 		# set vars
 		attrs = obj.attributes
@@ -56,8 +65,12 @@ Polymer
 		# set obj collection
 		arr = @_set_nodesValues(obj)
 
+		# get prop value
+		if prop != null && prop != undefined
+			node = arr[index][prop]
 		# get node value
-		node = arr[index][prop]
+		else
+			node = arr[index]
 
 		return node
 
@@ -71,6 +84,12 @@ Polymer
 			arr.push [prop, value]
 
 		return arr
+
+	_get_funcArguments: (func) ->
+		funStr = func.toString();
+		return funStr
+		#return funStr.slice(funStr.indexOf('(') + 1, funStr.indexOf(')')).match(/([^\s,]+)/g);
+
 
 
 	#------------------
@@ -91,24 +110,50 @@ Polymer
 
 		return arr
 
+	_set_parameterCollection: (arg1, arg2) ->
+
+		fn = @_set_parameterCollection
+		console.log(@_get_funcArguments(fn))
+		#set vars
+		#items = ['tag', 'classes', 'attributes', 'content', 'styles']
+
+	_set_attributeCollection: (index) ->
+		# set vars
+		arr = []
+
+		# get parameters
+		parameters = @_get_nodeValue(@_get_pins(), index)
+
+		# iterate obj
+		Object.getOwnPropertyNames(parameters).forEach (val, idx, array) ->
+			# set prop
+			prop = val
+
+			# set value
+			value = parameters[val]
+
+			# fill array
+			arr.push [prop, value]
+
+		return arr
+
 	#------------------
 	# ---- all build fn
 	# -----------------
-	_build_structure: ->
+
+	# STEP 1. CREATE WRAPPER
+	_build_structureWrap: ->
 		# set vars
 		component = this
 		componentArray = []
 		componentArray.push component
 		pins = @_get_pins()
 
+		@_set_parameterCollection('tag prova', 'cic')
+
+		return false
 
 		# build wrap -- tag: section -- class: paper-pull--builded--wrap
-		# params:
-		# 1. tag
-		# 2. classes
-		# 3. attributes
-		# 4. innerContent
-		# 5. inline styles
 		wrap = @_build_element(
 					obj = {
 						type : 'section',
@@ -118,12 +163,6 @@ Polymer
 				)
 
 		# build pins list -- tag: ul -- class: paper-pull--builded--list
-		# param:
-		# 1. tag
-		# 2. classes
-		# 3. attributes
-		# 4. innerContent
-		# 5. inline styles
 		list = @_build_element(
 					obj = {
 						type : 'ul',
@@ -140,12 +179,6 @@ Polymer
 			width = 'width:' + @_get_nodeValue(componentArray, 0, 'pinwidth') + 'px'
 
 			# build pin -- tag: section -- class: paper-pull--builded--wrap
-			# params:
-			# 1. tag
-			# 2. classes
-			# 3. attributes
-			# 4. innerContent
-			# 5. inline styles
 			pin = @_build_element(
 					obj = {
 						type : 'li',
@@ -158,12 +191,6 @@ Polymer
 			list.appendChild pin
 
 			# build article -- tag: article -- class: paper-pull--builded--article, paper-pull--type--[type]
-			# params:
-			# 1. tag
-			# 2. classes
-			# 3. attributes
-			# 4. innerContent
-			# 5. inline styles
 			article = @_build_element(
 						obj = {
 							type : 'article',
@@ -180,8 +207,7 @@ Polymer
 			customType = '_build_' + type
 
 			# add customType to article
-			console.log @[customType](el, index, type)
-			article.appendChild @[customType](el, index, type)
+			article.appendChild @[customType](pin, index, type)
 
 			# set class when all pins are loaded
 			if index == (pins.length - 1)
@@ -193,8 +219,114 @@ Polymer
 		# add wrap to component
 		component.appendChild wrap
 
-	# build custom element
-	# obj : tag + classes + attr + inline content + inline styles
+	# STEP 2. CREATE CUSTOM TAG CONTENT [div, figure, iframe]
+	# 1. default
+	_build_default: ->
+
+	# 2. image:
+	_build_picture: (pin, index, type) ->
+		ariaLabelLedBy =  @_get_nodeValue(@_get_pins(), index, 'aria-labelledby')
+
+		# build custom tag -- tag: figure -- class: paper-pull--type--[type]--wrap
+		tag = @_build_element(
+					obj = {
+						type : 'figure',
+						classes : [['paper-pull--type--' + type + '--wrap']],
+						attributes: [['aria-labelledby', ariaLabelLedBy]]
+					}
+				)
+
+		# remove attribute
+		@_remove_attributes(@_get_pin(index), 'aria-labelledby')
+
+		#if @_build_relatedContent(index) != undefined && @_build_relatedContent(index) != null
+			#tag.appendChild @_build_relatedContent(index)
+
+		# add custom content to custom tag
+		tag.appendChild @_build_content(index, type)
+
+		return tag
+
+	# 3. image:
+	_build_youtube: (pin, index) ->
+		tag = ''
+
+		return tag
+
+	# STEP 3. CREATE EACH CONTENT
+	# fill custom case content
+	_build_content: (index, type) ->
+		# build custom content -- tag: [custom] -- attributes: [collection of attributes]
+		tag = @_build_element(
+					obj = {
+						type : @_replace_tag(type),
+						attributes : @_set_attributeCollection(index)
+					}
+				)
+
+		return tag
+
+	# STEP 4. CREATE RELATED CONTENT [title, claim,, description]
+	_build_relatedContent: (index) ->
+		#get title
+		title = @_get_nodeValue(@_get_pins(), index, 'title')
+		claim = @_get_nodeValue(@_get_pins(), index, 'claim')
+		description = @_get_nodeValue(@_get_pins(), index, 'description')
+
+		if title != undefined && title != null || claim != undefined && claim != null
+			# build header -- tag: header -- class: paper-pull--short--header
+			header = @_build_element(
+					obj = {
+						type : 'header',
+						classes : [['paper-pull--short--header']],
+					}
+				)
+
+
+			# check if title exist
+			# add title to header
+			if title != undefined && title != null
+
+				# build title -- tag: h2 -- class: paper-pull--short--header
+				title = @_build_element(
+					obj = {
+						type : 'h2',
+						classes : [['paper-pull--short--title']],
+						content : title
+					}
+				)
+
+				header.appendChild title
+
+				# remove attribute
+				@_remove_attributes(@_get_pin(index), 'title')
+
+			# check if claim exist
+			# add claim to header
+			if claim != undefined && claim != null
+				# build claim -- tag: h2 -- class: paper-pull--short--header
+				claim = @_build_element(
+					obj = {
+						type : 'h3',
+						classes : [['paper-pull--short--claim']],
+						content : claim
+					}
+				)
+
+				header.appendChild claim
+
+				# remove attribute
+				@_remove_attributes(@_get_pin(index), 'claim')
+
+			return header
+
+	# build tag element + add class - attributes - inner content - inline style
+	# params:
+	# 1. tag
+	# 2. classes
+	# 3. attributes
+	# 4. content
+	# 5. inline styles
 	_build_element: (obj) ->
 		elem = document.createElement obj.type
 
@@ -206,7 +338,8 @@ Polymer
 		# set attribute
 		if obj.attributes != null && obj.attributes != undefined
 			for arr, index in obj.attributes
-				elem.setAttribute obj.attributes[index][0], obj.attributes[index][1]
+				if obj.attributes[index][1] != null && obj.attributes[index][1] != undefined
+					elem.setAttribute obj.attributes[index][0], obj.attributes[index][1]
 
 		# set innerHTML
 		if obj.content != null && obj.content != undefined
@@ -219,43 +352,26 @@ Polymer
 
 		return elem
 
-	# custom cases
-	# 1. default
-	_build_default: ->
-
-	# 2. image:
-	_build_picture: (pin, index, type) ->
-		# build custom tag -- tag: figure -- class: paper-pull--type--[type]--wrap
-		# params:
-		# 1. tag
-		# 2. classes
-		# 3. attributes
-		# 4. innerContent
-		# 5. inline styles
-		tag = @_build_element(
-					obj = {
-						type : 'figure',
-						classes : [['paper-pull--type--' + type + '--wrap']]
-					}
-				)
-
-		console.log(pin)
-		return tag
-
-	# 3. image:
-	_build_youtube: (pin, index) ->
-		tag = ''
-
-		return tag
-
 	#------------------
 	# ---- all replace fn
 	# -----------------
+	_replace_tag: (toReplace) ->
+		# check tag to replace
+		switch toReplace
+  			when 'picture'
+  				newTag = 'img'
+
+  			when 'default'
+  				newTag = 'p'
+
+  		return newTag
 
 	#------------------
 	# ---- all remove fn
 	# -----------------
-
+	_remove_attributes: (pin, attr) ->
+		# remove chooses attributes
+		pin.removeAttribute(attr)
 
 	# -----------------
 	# ---- all events
@@ -276,6 +392,6 @@ Polymer
 	_test : ->
 		component = []
 		component.push @
-		@_build_structure()
+		@_build_structureWrap()
 		#@_get_nodeValue(@_get_pins(), 0, 'jjj')
 
