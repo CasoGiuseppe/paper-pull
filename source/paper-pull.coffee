@@ -45,7 +45,8 @@ Polymer
 
 	_get_pinColumn: ->
 		# set vars
-		wrapWidth = if @_get_nodeValue(@_get_component(), 0, 'wrapwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'wrapwidth') else @_get_windowWidth()
+		wrap = @.querySelector('.paper-pull--builded--wrap')
+		wrapWidth = wrap.clientWidth
 		pinWidth = if @_get_nodeValue(@_get_component(), 0, 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinwidth') else @_set_defaultValue('pinWidth')
 		pinMargin = if @_get_nodeValue(@_get_component(), 0, 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinspace') else @_set_defaultValue('pinMargin')
 		centeredMode = @_get_nodeValue(@_get_component(), 0, 'centered')
@@ -103,6 +104,8 @@ Polymer
 
 		if node != undefined && node != null
 			return node
+		else
+			return false
 
 	_get_nodeExist: (prop, value) ->
 		# set vars
@@ -167,7 +170,7 @@ Polymer
 		# set vars
 		cell = @.querySelectorAll('.paper-pull--builded--cell')
 		wrap = @.querySelector('.paper-pull--builded--wrap')
-		wrapWidth = if @_get_nodeValue(@_get_component(), 0, 'wrapwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'wrapwidth') else @_get_windowWidth()
+		wrapWidth = wrapWidth = wrap.clientWidth
 		pinWidth = if @_get_nodeValue(@_get_component(), 0, 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinwidth') else @_set_defaultValue('pinWidth')
 		pinMargin = if @_get_nodeValue(@_get_component(), 0, 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinspace') else @_set_defaultValue('pinMargin')
 		centeredMode = @_get_nodeValue(@_get_component(), 0, 'centered')
@@ -232,6 +235,7 @@ Polymer
 
 		return arr
 
+
 	#------------------
 	# ---- all build fn
 	# -----------------
@@ -239,6 +243,7 @@ Polymer
 	# STEP 1. CREATE WRAPPER
 	_build_structureWrap: ->
 		# set vars
+		component = this
 		pins = @_get_pins()
 		maxWidth = if @_get_nodeValue(@_get_component(), 0, 'wrapwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'wrapwidth') else @_get_windowWidth()
 
@@ -255,6 +260,9 @@ Polymer
 					}
 				)
 
+		# add wrap to component
+		@.appendChild wrap
+
 		# build pins list
 		# tag: ul
 		# class: paper-pull--builded--list
@@ -264,6 +272,7 @@ Polymer
 						classes : [['paper-pull--builded--list']]
 					}
 				)
+
 
 		# build pin
 		# tag: li
@@ -316,15 +325,52 @@ Polymer
 			if index == (pins.length - 1)
 				@.setAttribute('class', 'loaded')
 
-		# add list to wrap
-		wrap.appendChild list
+			# add list to wrap
+			wrap.appendChild list
 
-		# add wrap to component
-		@.appendChild wrap
+			# add wrap to component
+			@.appendChild wrap
+
+		# temp fn to solve
+		# repositioning
+		# setTimeout (->
+		# 	# set pins position
+		# 	component._set_pinConfPosition()
+		# 	return
+		# ), 200
 
 	# STEP 2. CREATE CUSTOM TAG CONTENT [div, figure, iframe]
 	# 1. default
-	_build_default: ->
+	_build_text: (pin, index, type) ->
+		# set vars
+		component = this
+
+		# build custom tag
+		# tag: div
+		# class: paper-pull--type--[type]--wrap
+		tag = @_build_element(
+					obj = {
+						type : 'div',
+						classes : [['paper-pull--type--' + type + '--wrap']]
+					}
+				)
+
+		# if related header exist
+		# add it to custom tag
+		header = @_build_relatedContent('header', index, 'header')
+		if header
+			tag.appendChild header
+
+		# if related description exist
+		# add it to custom tag
+		description = @_build_relatedContent('description', index, 'p')
+		if description
+			tag.appendChild description
+
+			# set pins position
+			component._set_pinConfPosition()
+
+		return tag
 
 	# 2. image:
 	_build_picture: (pin, index, type) ->
@@ -373,7 +419,11 @@ Polymer
 			content.src = this.src
 
 			# set pins position
-			component._set_pinConfPosition()
+			# with little delay
+			setTimeout ( ->
+				component._set_pinConfPosition()
+				return
+			), 400
 
 		# set dynamic source image
 		newImg.src = src
@@ -381,11 +431,27 @@ Polymer
 		# add custom content to custom tag
 		tag.appendChild content
 
+		# check if node href exist to put a link
+		if @_get_nodeValue(@_get_pins(), index, 'href')
+			anchor = @_build_element(
+						obj = {
+							type : 'a',
+							attributes: [['href', @_get_nodeValue(@_get_pins(), index, 'href')], ['target', '_blank']]
+						}
+					)
+
+			# add anchor to tag
+			anchor.appendChild tag
+
+			# set tag var with anchor obj content
+			tag = anchor
+
 		return tag
 
 	# 3. video youtube:
 	_build_youtube: (pin, index, type) ->
 		# set vars
+		component = @
 		url = @_get_nodeValue(@_get_pins(), index, 'video')
 		newUrl = url.replace('/watch?v=', '/embed/')
 		ariaLabelLedBy =  @_get_nodeValue(@_get_pins(), index, 'aria-labelledby')
@@ -395,6 +461,16 @@ Polymer
 			src = newUrl + '?autoplay=0'
 		else
 			src = url + '?autoplay=0'
+
+		# build iframe wrap
+		# tag: div
+		# class: paper-pull--type--iframe--wrap
+		wrap = @_build_element(
+					obj = {
+						type : 'div',
+						classes : [['paper-pull--type--iframe--wrap']]
+					}
+				)
 
 		# build custom tag
 		# tag: iframe
@@ -407,8 +483,12 @@ Polymer
 						attributes: [['aria-labelledby', ariaLabelLedBy], ['frameborder', '0'], ['allowfullscreen', ''], ['src', src]]
 					}
 				)
+
+		# add tag to wrap
+		wrap.appendChild tag
+
 		#return false
-		return tag
+		return wrap
 
 	# STEP 3. CREATE EACH CONTENT
 	# fill custom case content
@@ -432,15 +512,9 @@ Polymer
 
 	# 4.1 CREATE RELATED HEADER [title, claim]
 	_build_related_header: (type, index, tag) ->
-		# get title
-		# get claim
-		# get description
-		title = @_get_nodeValue(@_get_pins(), index, 'title')
-		claim = @_get_nodeValue(@_get_pins(), index, 'claim')
-		description = @_get_nodeValue(@_get_pins(), index, 'description')
 
 		# check if title || claim exist
-		if title != undefined && title != null || claim != undefined && claim != null
+		if @_get_nodeValue(@_get_pins(), index, 'title') || @_get_nodeValue(@_get_pins(), index, 'claim')
 
 			# build custom tag
 			# tag: header
@@ -453,7 +527,7 @@ Polymer
 			)
 
 			# check if title exist
-			if title != undefined && title != null
+			if @_get_nodeValue(@_get_pins(), index, 'title')
 
 				# build custom tag
 				# tag: h2
@@ -463,7 +537,7 @@ Polymer
 					obj = {
 						type : 'h2',
 						classes : [['paper-pull--short--title']],
-						content : title
+						content : @_get_nodeValue(@_get_pins(), index, 'title')
 					}
 				)
 
@@ -474,7 +548,7 @@ Polymer
 				@_remove_attributes(@_get_pin(index), 'title')
 
 			# check if claim exist
-			if claim != undefined && claim != null
+			if @_get_nodeValue(@_get_pins(), index, 'claim')
 
 				# build custom tag
 				# tag: h2
@@ -484,7 +558,7 @@ Polymer
 					obj = {
 						type : 'h3',
 						classes : [['paper-pull--short--claim']],
-						content : claim
+						content : @_get_nodeValue(@_get_pins(), index, 'claim')
 					}
 				)
 
@@ -500,10 +574,7 @@ Polymer
 
 	# 4.2 CREATE RELATED DESCRIPTION [description]
 	_build_related_description: (type, index, tag) ->
-		# get description
-		description = @_get_nodeValue(@_get_pins(), index, 'description')
-
-		if description != undefined && description != null
+		if @_get_nodeValue(@_get_pins(), index, 'description')
 
 			# build custom tag
 			# tag: [tag]
@@ -513,7 +584,7 @@ Polymer
 				obj = {
 					type : tag,
 					classes : [['paper-pull--short--' + type]],
-					content : description
+					content : @_get_nodeValue(@_get_pins(), index, 'description')
 				}
 			)
 
@@ -583,6 +654,7 @@ Polymer
 
 	attached: ->
 		@_build_structureWrap()
+		#@_test()
 
 	ready: ->
 
@@ -594,13 +666,48 @@ Polymer
 		if component.classList.contains('loaded')
 			@_set_pinConfPosition()
 
-
 	#------------------
 	# ---- test
 	# -----------------
 	_test : ->
 		component = []
 		component.push @
-		@_build_structureWrap()
+		@_get_externalFile("object.json", (response) -> 
+			json = JSON.parse response
+			return json.pins[0])
+		#@_build_structureWrap()
 		#@_get_nodeValue(@_get_pins(), 0, 'jjj')
+
+
+	# ------------------- temp ------------------------
+	_get_externalFile: (file, fn) ->
+		# set vars
+		component = this
+		xmlhttp = new XMLHttpRequest()
+
+		xmlhttp.onreadystatechange = ->
+			if xmlhttp.readyState == 4
+
+				# status ok
+				if xmlhttp.status == 200
+					if typeof fn == 'function'
+						# pass the result to custom fn
+                		fn xmlhttp.responseText ;
+
+				# status 'not found'
+				else if xmlhttp.status == 400
+					console.log 'not found'
+
+				# status 'error'
+				else
+					console.log 'error'
+			return
+
+		xmlhttp.open("GET", file, true);
+		xmlhttp.send();
+
+		return xmlhttp
+
+
+	# -------------------------------------------------
 

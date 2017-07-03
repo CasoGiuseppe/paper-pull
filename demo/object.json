@@ -1,0 +1,13 @@
+{
+	"pins":[
+		{
+			"tagName" : "picture",
+			"aria-labelledby" : "caption aria",
+			"src" : "img/photo1.jpg",
+			"alt" : "alt image 1",
+			"title" : "Title1",
+			"claim" : "Claim1",
+			"description" : "short description"
+		}
+	]
+}

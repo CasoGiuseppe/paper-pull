@@ -3,7 +3,8 @@
 	display: block;
 
 	// appearance
-	font-family: 'Wire One', serif;
+	font-family: 'Raleway', serif;
+	font-weight: normal;
 
 	&::content {
 		// base
@@ -66,23 +67,18 @@
 		// 1.1 title
 		.paper-pull--short--title {
 			// appearance
-			font-family: 'Josefin Slab', serif;
+			font-family: 'Raleway', serif;
 		}
 
 		// 2. short description
 		.paper-pull--short--description {
 			// structure
 			width: 100%;
-			position: absolute;
 			padding: 10px;
-
-			// position
-			bottom: 0;
-			z-index: 10;
 
 			// appearance
 			box-sizing: border-box;
-			color: #fff
+			font-size: .8em;
 		}
 
 		// pins types
@@ -128,6 +124,19 @@
 				}
 			}
 
+			// abs description
+			.paper-pull--short--description {
+				// structure
+				position: absolute;
+
+				// position
+				bottom: 0;
+				z-index: 10;
+
+				// appearance
+				color: #fff
+			}
+
 			// hover handle
 			&.paper-pull--hover {
 				&:hover {
@@ -146,6 +155,21 @@
 				transition: transform .3s ease-out
 				// -webkit-filter: sepia(1);
 				// filter: sepia(1);
+			}
+		}
+
+		// 2. youtube
+		.paper-pull--type--iframe--wrap{
+			position: relative;
+			padding-bottom: 56.25%;
+			height: 0;
+
+			.paper-pull--type--youtube--wrap{
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
 			}
 		}
 	}
