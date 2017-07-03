@@ -11,6 +11,12 @@ Polymer
 	#------------------
 	# ---- all get fn
 	# -----------------
+	_get_component: ->
+		component = this
+		componentArray = []
+		componentArray.push component
+
+		return componentArray
 
 	_get_windowWidth: ->
 		# get value
@@ -36,6 +42,29 @@ Polymer
 		pin = pins[index]
 
 		return pin
+
+	_get_pinColumn: ->
+		# set vars
+		wrapWidth = if @_get_nodeValue(@_get_component(), 0, 'wrapwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'wrapwidth') else @_get_windowWidth()
+		pinWidth = if @_get_nodeValue(@_get_component(), 0, 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinwidth') else @_set_defaultValue('pinWidth')
+		pinMargin = if @_get_nodeValue(@_get_component(), 0, 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinspace') else @_set_defaultValue('pinMargin')
+		centeredMode = @_get_nodeValue(@_get_component(), 0, 'centered')
+
+		# set coloumn
+		if centeredMode != null and centeredMode != undefined and centeredMode != 'false'
+			count = Math.floor(wrapWidth / (pinWidth + pinMargin * 2))
+		else
+			count = Math.floor(wrapWidth / (pinWidth + pinMargin))
+
+		return parseFloat count
+
+	_get_pinLeftPosition: (index, spaceLeft) ->
+  		# set vars
+  		pinWidth = if @_get_nodeValue(@_get_component(), 0, 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinwidth') else @_set_defaultValue('pinWidth')
+  		pinMargin = if @_get_nodeValue(@_get_component(), 0, 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinspace') else @_set_defaultValue('pinMargin')
+  		left = (pinMargin + (index * (pinWidth + pinMargin))) + spaceLeft
+
+  		return left
 
 	_get_allAttributes: (obj) ->
 		# set vars
@@ -72,7 +101,8 @@ Polymer
 		else
 			node = arr[index]
 
-		return node
+		if node != undefined && node != null
+			return node
 
 	_get_nodeExist: (prop, value) ->
 		# set vars
@@ -85,37 +115,87 @@ Polymer
 
 		return arr
 
-	_get_funcArguments: (func) ->
-		funStr = func.toString();
-		return funStr
-		#return funStr.slice(funStr.indexOf('(') + 1, funStr.indexOf(')')).match(/([^\s,]+)/g);
+	_get_propertyExist: (array, prop) ->
+		return array.hasOwnProperty(prop)
 
+	_get_minValueInArray: (array) ->
+  		Math.min.apply Math, array
 
+	_get_indexInArray: (elem, array) ->
+		# set vars
+		length = array.length
+
+		# parse array
+		for el, index in array
+
+			# check if elem == array[i]
+			if elem == parseFloat el
+				# return index value
+				return index
+
+		return false
 
 	#------------------
 	# ---- all set fn
 	#------------------
-	_set_nodesValues: (obj) ->
+	_set_defaultValue: (prop) ->
+		defaultValues = [{
+				pinWidth : 300,
+				pinMargin : 0
+			}]
+
+		return defaultValues[0][prop]
+
+	_set_pinConfPosition: ->
 		# set vars
-		arr = []
+		cell = @.querySelectorAll('.paper-pull--builded--cell')
+		pinMargin = if @_get_nodeValue(@_get_component(), 0, 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinspace') else @_set_defaultValue('pinMargin')
+		pinMarginArray = []
 
-		# iterate pins
-		for el, index in obj
+		# get column number
+		count = @_get_pinColumn()
 
-			# get attributes
-			attrs = @_get_allAttributes(el)
+		# add item to array
+		for c, index in cell
+			if index < count
+				pinMarginArray.push pinMargin
 
-			# fill array arr[]
-			arr.push @_get_allAttributeValues(attrs)
+		# call: set_pinNewPosition
+		@_set_pinNewPosition(pinMarginArray)
 
-		return arr
+	_set_pinNewPosition : (array) ->
+		# set vars
+		cell = @.querySelectorAll('.paper-pull--builded--cell')
+		wrap = @.querySelector('.paper-pull--builded--wrap')
+		wrapWidth = if @_get_nodeValue(@_get_component(), 0, 'wrapwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'wrapwidth') else @_get_windowWidth()
+		pinWidth = if @_get_nodeValue(@_get_component(), 0, 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinwidth') else @_set_defaultValue('pinWidth')
+		pinMargin = if @_get_nodeValue(@_get_component(), 0, 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinspace') else @_set_defaultValue('pinMargin')
+		centeredMode = @_get_nodeValue(@_get_component(), 0, 'centered')
 
-	_set_parameterCollection: (arg1, arg2) ->
+		# set var spaceLeft
+		if centeredMode != null and centeredMode != undefined and centeredMode != 'false'
+			spaceLeft = (wrapWidth - (( pinWidth * @_get_pinColumn() ) + ( pinMargin * ( @_get_pinColumn() - 1 )))) / 2;
+		else
+			spaceLeft = 0
 
-		fn = @_set_parameterCollection
-		console.log(@_get_funcArguments(fn))
-		#set vars
-		#items = ['tag', 'classes', 'attributes', 'content', 'styles']
+		# set column size
+		count = @_get_pinColumn()
+
+		for c in cell
+			# get element height
+			height = c.clientHeight
+
+			# get min array value
+			min = @_get_minValueInArray(array)
+
+			# get index of min array value
+			index = @_get_indexInArray(min, array)
+
+			# set new left + new top position
+			c.style.left = @_get_pinLeftPosition(index, spaceLeft) + 'px'
+			c.style.top = min + 'px'
+
+			array[index] = min + height + pinMargin
 
 	_set_attributeCollection: (index) ->
 		# set vars
@@ -137,6 +217,21 @@ Polymer
 
 		return arr
 
+	_set_nodesValues: (obj) ->
+		# set vars
+		arr = []
+
+		# iterate pins
+		for el, index in obj
+
+			# get attributes
+			attrs = @_get_allAttributes(el)
+
+			# fill array arr[]
+			arr.push @_get_allAttributeValues(attrs)
+
+		return arr
+
 	#------------------
 	# ---- all build fn
 	# -----------------
@@ -144,25 +239,25 @@ Polymer
 	# STEP 1. CREATE WRAPPER
 	_build_structureWrap: ->
 		# set vars
-		component = this
-		componentArray = []
-		componentArray.push component
 		pins = @_get_pins()
+		maxWidth = if @_get_nodeValue(@_get_component(), 0, 'wrapwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'wrapwidth') else @_get_windowWidth()
 
-		@_set_parameterCollection('tag prova', 'cic')
 
-		return false
-
-		# build wrap -- tag: section -- class: paper-pull--builded--wrap
+		# build wrap
+		# tag: section
+		# class: paper-pull--builded--wrap
+		# inlineStyle: [max-width]
 		wrap = @_build_element(
 					obj = {
 						type : 'section',
 						classes : [['paper-pull--builded--wrap']],
-						styles : [['maxWidth', @_get_nodeValue(componentArray, 0, 'wrapwidth') + 'px']]
+						styles : [['maxWidth', maxWidth + 'px']]
 					}
 				)
 
-		# build pins list -- tag: ul -- class: paper-pull--builded--list
+		# build pins list
+		# tag: ul
+		# class: paper-pull--builded--list
 		list = @_build_element(
 					obj = {
 						type : 'ul',
@@ -170,33 +265,41 @@ Polymer
 					}
 				)
 
-		# build pin -- tag: li -- class: paper-pull--builded--cell
+		# build pin
+		# tag: li
+		# class: paper-pull--builded--cell
 		for el, index in pins
 			# set vars
 			type = el.tagName.toLowerCase()
 
 			# get pin width
-			width = 'width:' + @_get_nodeValue(componentArray, 0, 'pinwidth') + 'px'
+			width = if @_get_nodeValue(@_get_component(), 0, 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinwidth') else @_set_defaultValue('pinWidth')
 
-			# build pin -- tag: section -- class: paper-pull--builded--wrap
+			# build pin
+			# tag: section
+			# class: paper-pull--builded--wrap
+			# innerStyle: [width]
 			pin = @_build_element(
 					obj = {
 						type : 'li',
 						classes : [['paper-pull--builded--cell']],
-						styles : [['width', @_get_nodeValue(componentArray, 0, 'pinwidth') + 'px']]
+						styles : [['width', width + 'px']]
 					}
 				)
 
 			# add pins to list
 			list.appendChild pin
 
-			# build article -- tag: article -- class: paper-pull--builded--article, paper-pull--type--[type]
+			# build article
+			# tag: article
+			# class: paper-pull--builded--article, paper-pull--type--[type]
+			# attribute: role, aria-label
+			# innerStyle: [width]
 			article = @_build_element(
 						obj = {
 							type : 'article',
 							classes : [['paper-pull--builded--article'], ['paper-pull--type--' + type]],
-							attributes : [['role', 'contentinfo'], ['aria-label', 'article']],
-							styles : [['width', @_get_nodeValue(componentArray, 0, 'pinwidth') + 'px']]
+							attributes : [['role', 'contentinfo'], ['aria-label', 'article']]
 						}
 					)
 
@@ -211,13 +314,13 @@ Polymer
 
 			# set class when all pins are loaded
 			if index == (pins.length - 1)
-				component.setAttribute('class', 'loaded')
+				@.setAttribute('class', 'loaded')
 
 		# add list to wrap
 		wrap.appendChild list
 
 		# add wrap to component
-		component.appendChild wrap
+		@.appendChild wrap
 
 	# STEP 2. CREATE CUSTOM TAG CONTENT [div, figure, iframe]
 	# 1. default
@@ -225,9 +328,15 @@ Polymer
 
 	# 2. image:
 	_build_picture: (pin, index, type) ->
+		# set vars
+		component = this
 		ariaLabelLedBy =  @_get_nodeValue(@_get_pins(), index, 'aria-labelledby')
+		src = @_get_nodeValue(@_get_pins(), index, 'src')
 
-		# build custom tag -- tag: figure -- class: paper-pull--type--[type]--wrap
+		# build custom tag
+		# tag: figure
+		# class: paper-pull--type--[type]--wrap
+		# attribute: [aria-labelledby]
 		tag = @_build_element(
 					obj = {
 						type : 'figure',
@@ -239,24 +348,74 @@ Polymer
 		# remove attribute
 		@_remove_attributes(@_get_pin(index), 'aria-labelledby')
 
-		#if @_build_relatedContent(index) != undefined && @_build_relatedContent(index) != null
-			#tag.appendChild @_build_relatedContent(index)
+		# if related header exist
+		# add it to custom tag
+		header = @_build_relatedContent('header', index, 'header')
+		if header
+			tag.appendChild header
+
+
+		# if related description exist
+		# add it to custom tag
+		description = @_build_relatedContent('description', index, 'figcaption')
+		if description
+			tag.appendChild description
+
+		# store content in var
+		content = @_build_content(index, type)
+
+		# asynchronous load image
+		# set vars
+		newImg = new Image()
+
+		# crete load event
+		newImg.onload = ->
+			content.src = this.src
+
+			# set pins position
+			component._set_pinConfPosition()
+
+		# set dynamic source image
+		newImg.src = src
 
 		# add custom content to custom tag
-		tag.appendChild @_build_content(index, type)
+		tag.appendChild content
 
 		return tag
 
-	# 3. image:
-	_build_youtube: (pin, index) ->
-		tag = ''
+	# 3. video youtube:
+	_build_youtube: (pin, index, type) ->
+		# set vars
+		url = @_get_nodeValue(@_get_pins(), index, 'video')
+		newUrl = url.replace('/watch?v=', '/embed/')
+		ariaLabelLedBy =  @_get_nodeValue(@_get_pins(), index, 'aria-labelledby')
 
+		# check url type
+		if url.indexOf('youtube.com/watch?v=') > -1
+			src = newUrl + '?autoplay=0'
+		else
+			src = url + '?autoplay=0'
+
+		# build custom tag
+		# tag: iframe
+		# class: paper-pull--type--[type]--wrap
+		# attribute: [aria-labelledby], [frameborder], [allowfullscreen], [src]
+		tag = @_build_element(
+					obj = {
+						type : 'iframe',
+						classes : [['paper-pull--type--' + type + '--wrap']],
+						attributes: [['aria-labelledby', ariaLabelLedBy], ['frameborder', '0'], ['allowfullscreen', ''], ['src', src]]
+					}
+				)
+		#return false
 		return tag
 
 	# STEP 3. CREATE EACH CONTENT
 	# fill custom case content
 	_build_content: (index, type) ->
-		# build custom content -- tag: [custom] -- attributes: [collection of attributes]
+		# build custom content
+		# tag: [custom]
+		# attributes: [collection of attributes]
 		tag = @_build_element(
 					obj = {
 						type : @_replace_tag(type),
@@ -266,29 +425,41 @@ Polymer
 
 		return tag
 
-	# STEP 4. CREATE RELATED CONTENT [title, claim,, description]
-	_build_relatedContent: (index) ->
-		#get title
+	# STEP 4. CREATE RELATED CONTENT
+	_build_relatedContent: (type, index, tag) ->
+		fn = '_build_related_' + type
+		@[fn](type, index, tag)
+
+	# 4.1 CREATE RELATED HEADER [title, claim]
+	_build_related_header: (type, index, tag) ->
+		# get title
+		# get claim
+		# get description
 		title = @_get_nodeValue(@_get_pins(), index, 'title')
 		claim = @_get_nodeValue(@_get_pins(), index, 'claim')
 		description = @_get_nodeValue(@_get_pins(), index, 'description')
 
+		# check if title || claim exist
 		if title != undefined && title != null || claim != undefined && claim != null
-			# build header -- tag: header -- class: paper-pull--short--header
-			header = @_build_element(
-					obj = {
-						type : 'header',
-						classes : [['paper-pull--short--header']],
-					}
-				)
 
+			# build custom tag
+			# tag: header
+			# class: paper-pull--short--[type]
+			header = @_build_element(
+				obj = {
+					type : tag,
+					classes : [['paper-pull--short--' + type]]
+				}
+			)
 
 			# check if title exist
-			# add title to header
 			if title != undefined && title != null
 
-				# build title -- tag: h2 -- class: paper-pull--short--header
-				title = @_build_element(
+				# build custom tag
+				# tag: h2
+				# class: paper-pull--short--title
+				# innerContent: [title]
+				el = @_build_element(
 					obj = {
 						type : 'h2',
 						classes : [['paper-pull--short--title']],
@@ -296,16 +467,20 @@ Polymer
 					}
 				)
 
-				header.appendChild title
+				# add title to header
+				header.appendChild (el)
 
-				# remove attribute
+				# remove attribute title
 				@_remove_attributes(@_get_pin(index), 'title')
 
 			# check if claim exist
-			# add claim to header
 			if claim != undefined && claim != null
-				# build claim -- tag: h2 -- class: paper-pull--short--header
-				claim = @_build_element(
+
+				# build custom tag
+				# tag: h2
+				# class: paper-pull--short--title
+				# innerContent: [claim]
+				el = @_build_element(
 					obj = {
 						type : 'h3',
 						classes : [['paper-pull--short--claim']],
@@ -313,12 +488,41 @@ Polymer
 					}
 				)
 
-				header.appendChild claim
+				# add title to header
+				header.appendChild (el)
 
-				# remove attribute
+				# remove attribute claim
 				@_remove_attributes(@_get_pin(index), 'claim')
 
 			return header
+		else
+			return false
+
+	# 4.2 CREATE RELATED DESCRIPTION [description]
+	_build_related_description: (type, index, tag) ->
+		# get description
+		description = @_get_nodeValue(@_get_pins(), index, 'description')
+
+		if description != undefined && description != null
+
+			# build custom tag
+			# tag: [tag]
+			# class: paper-pull--short-- + [type]
+			# innerContent: [description]
+			description = @_build_element(
+				obj = {
+					type : tag,
+					classes : [['paper-pull--short--' + type]],
+					content : description
+				}
+			)
+
+			# remove attribute description
+			@_remove_attributes(@_get_pin(index), 'description')
+
+			return description
+		else
+			return false
 
 	# build tag element + add class - attributes - inner content - inline style
 	# params:
@@ -378,12 +582,17 @@ Polymer
 	# -----------------
 
 	attached: ->
-		@_test()
+		@_build_structureWrap()
+
 	ready: ->
 
 	_onLoad: ->
 
 	_onResize: ->
+		# set vars
+		component = this
+		if component.classList.contains('loaded')
+			@_set_pinConfPosition()
 
 
 	#------------------
