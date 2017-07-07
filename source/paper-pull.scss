@@ -18,7 +18,6 @@
 		// builded wrap
 		.paper-pull--builded--wrap {
 			margin: auto;
-			height: 500px;
 			background: #ff0000
 		}
 
@@ -36,11 +35,22 @@
 			// appearance
 			background: #fff;
 			box-shadow: 0px 0px 8px 0px rgba(28,45,206,0.6);
-			border-radius: 1	px;
+			border-radius: 1px;
 			overflow: hidden;
 
 			// anim
-			transition: all .5s ease-out
+			transition: all .5s ease-out;
+
+			// responsive
+			@media (max-width: 680px) {
+				// structure
+				position: relative;
+				width: 100%;
+				margin-bottom: 10px;
+
+				// appearance
+				box-shadow: none
+			}
 		}
 
 		// builded article
@@ -153,8 +163,6 @@
 
 				// transition
 				transition: transform .3s ease-out
-				// -webkit-filter: sepia(1);
-				// filter: sepia(1);
 			}
 		}
 

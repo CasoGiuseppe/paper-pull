@@ -8,6 +8,53 @@
 			"title" : "Title1",
 			"claim" : "Claim1",
 			"description" : "short description"
+		},
+
+
+		{
+			"tagName" : "picture",
+			"src" : "img/photo2.jpg",
+            "alt" : "alt image 2",
+            "aria-labelledby" : "caption aria",
+            "title" : "Title 2"
+		},
+
+		{
+			"tagName" : "youtube",
+			"video" : "https://www.youtube.com/watch?v=4DiJT-RWa7g",
+            "aria-labelledby" : "video caption aria"
+		},
+
+		{
+			"tagName" : "picture",
+			"src" : "img/photo3.jpg",
+            "alt" : "alt image 2",
+            "description" : "short description short description short description short description short description short description short description short description",
+            "aria-labelledby" :"caption aria"
+		},
+
+		{
+			"tagName" : "picture",
+			"src" : "img/photo4.jpg",
+            "alt" : "alt image 4",
+            "claim" : "claim4",
+            "aria-labelledby" :"caption aria"
+		},
+
+		{
+			"tagName" : "picture",
+			"src" : "img/photo5.jpg",
+            "alt" : "alt image 2",
+            "title" : "Title5",
+            "description" : "short description short description short description short description short description short description short description short description",
+            "aria-labelledby" :"caption aria"
+		},
+
+		{
+			"tagName" : "default",
+            "title" : "Title1",
+            "claim" : "claim",
+            "description" : "<strong>short description short description </strong>short description short description short description short description short description short description short description short description short description short description short description short description short description short description short description short description short description short <a href='#'>description short description short</a> description short description short description short description short description short description short description short description short description short description short description short description short description short description short description short description short description short description short description"
 		}
 	]
 }

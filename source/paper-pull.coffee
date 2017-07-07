@@ -11,38 +11,29 @@ Polymer
 	#------------------
 	# ---- all get fn
 	# -----------------
+
+	# get component obj
+	# and put it in array
 	_get_component: ->
+		# set vars
 		component = this
-		componentArray = []
-		componentArray.push component
+		attrs = @_get_allAttributes(component)
+		main = {}
 
-		return componentArray
+		# fill main array
+		main =  @_get_allValues(attrs)
 
+		return main
+
+	# get user window width
 	_get_windowWidth: ->
 		# get value
 		winWidth = window.innerWidth
 
-		return winWidth
+		return parseFloat winWidth
 
-	_get_pins: ->
-		# set vars
-		component = this
-
-		# get pins elements
-		pull = component.querySelector('.paper-pull-wrap')
-		pins = pull.getElementsByTagName('*')
-
-		return pins
-
-	_get_pin: (index) ->
-		# get pins
-		pins = @_get_pins()
-
-		# get pin by index
-		pin = pins[index]
-
-		return pin
-
+	# get how many column
+	# we need to fit the wrap
 	_get_pinColumn: ->
 		# set vars
 		wrap = @.querySelector('.paper-pull--builded--wrap')
@@ -59,21 +50,103 @@ Polymer
 
 		return parseFloat count
 
+	# get left position
+	# for every element
 	_get_pinLeftPosition: (index, spaceLeft) ->
   		# set vars
-  		pinWidth = if @_get_nodeValue(@_get_component(), 0, 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinwidth') else @_set_defaultValue('pinWidth')
-  		pinMargin = if @_get_nodeValue(@_get_component(), 0, 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinspace') else @_set_defaultValue('pinMargin')
+  		pinWidth = if @_get_nodeValue(@_get_component(), 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 'pinwidth') else @_set_defaultValue('pinWidth')
+  		pinMargin = if @_get_nodeValue(@_get_component(), 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 'pinspace') else @_set_defaultValue('pinMargin')
   		left = (pinMargin + (index * (pinWidth + pinMargin))) + spaceLeft
 
   		return left
 
+  	# get all prop name
+  	# for a passed obj
 	_get_allAttributes: (obj) ->
 		# set vars
 		attrs = obj.attributes
 
 		return attrs
 
+	# get all prop values
+	# for passed obj
 	_get_allAttributeValues: (obj)->
+		# set vars
+		node = ''
+		value = ''
+		temp = {}
+
+		# parse array
+		for attr, index in obj
+
+			# get attribute name && attribute value
+			node = attr.nodeName
+			value = attr.nodeValue
+
+			# set temp array
+			temp[node] = value
+
+			console.log temp
+		return temp
+
+	# get a value of an array node
+	# or get all array obj
+	_get_nodeValue: (obj, prop) ->
+		# set obj collection
+		arr = obj
+
+		# get prop value
+		if prop != null && prop != undefined
+			node = arr[prop]
+		# get node value
+		else
+			node = arr
+
+		if node != undefined && node != null
+			return node
+		else
+			return false
+
+	# get node if exist
+	_get_nodeExist: (prop, value) ->
+		# set vars
+		arr = []
+
+		# check if value != undefined/null
+		if value != undefined and value != null
+			# set array with value
+			arr.push [prop, value]
+
+		return arr
+
+	# get prop if exist
+	_get_propertyExist: (array, prop) ->
+		return array.hasOwnProperty(prop)
+
+	# get min value for
+	# a passed array
+	_get_minValueInArray: (array) ->
+  		Math.min.apply Math, array
+
+  	# get a index value
+  	# for node in a passed array
+	_get_indexInArray: (elem, array) ->
+		# set vars
+		length = array.length
+
+		# parse array
+		for el, index in array
+
+			# check if elem == array[i]
+			if elem == parseFloat el
+				# return index value
+				return index
+
+		return false
+
+	# get all value, prop name 
+	# and prop value, for a passed obj
+	_get_allValues: (obj)->
 		# set vars
 		node = ''
 		value = ''
@@ -91,68 +164,62 @@ Polymer
 
 		return temp
 
-	_get_nodeValue: (obj, index, prop) ->
-		# set obj collection
-		arr = @_set_nodesValues(obj)
-
-		# get prop value
-		if prop != null && prop != undefined
-			node = arr[index][prop]
-		# get node value
-		else
-			node = arr[index]
-
-		if node != undefined && node != null
-			return node
-		else
-			return false
-
-	_get_nodeExist: (prop, value) ->
+	# load an external file
+	# use it to load the xml with pins
+	_get_externalFile: (file, fn) ->
 		# set vars
-		arr = []
+		component = this
+		xmlhttp = new XMLHttpRequest()
 
-		# check if value != undefined/null
-		if value != undefined and value != null
-			# set array with value
-			arr.push [prop, value]
+		xmlhttp.onreadystatechange = ->
+			if xmlhttp.readyState == 4
 
-		return arr
+				# status ok
+				if xmlhttp.status == 200
+					if typeof fn == 'function'
+						# pass the result to custom fn
+                		fn xmlhttp.responseText ;
 
-	_get_propertyExist: (array, prop) ->
-		return array.hasOwnProperty(prop)
+				# status 'not found'
+				else if xmlhttp.status == 400
+					console.log 'not found'
 
-	_get_minValueInArray: (array) ->
-  		Math.min.apply Math, array
+				# status 'error'
+				else
+					console.log 'error'
+			return
 
-	_get_indexInArray: (elem, array) ->
-		# set vars
-		length = array.length
+		xmlhttp.open("GET", file, true);
+		xmlhttp.send();
 
-		# parse array
-		for el, index in array
+		return xmlhttp
 
-			# check if elem == array[i]
-			if elem == parseFloat el
-				# return index value
-				return index
+	# get mobile version [true, false]
+	_get_responsive: ->
+		responsive = @_get_windowWidth() >= parseFloat @_set_defaultValue('mobile')
 
-		return false
-
+		return responsive
 	#------------------
 	# ---- all set fn
 	#------------------
+
+	# set init value
 	_set_defaultValue: (prop) ->
 		defaultValues = [{
 				pinWidth : 300,
-				pinMargin : 0
+				pinMargin : 0,
+				mobile : 680
 			}]
 
 		return defaultValues[0][prop]
 
+	# set value for positioning
+	# the pins.
+	# fill the array with margins
 	_set_pinConfPosition: ->
 		# set vars
 		cell = @.querySelectorAll('.paper-pull--builded--cell')
-		pinMargin = if @_get_nodeValue(@_get_component(), 0, 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinspace') else @_set_defaultValue('pinMargin')
+		pinMargin = if @_get_nodeValue(@_get_component(), 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 'pinspace') else @_set_defaultValue('pinMargin')
 		pinMarginArray = []
 
 		# get column number
@@ -166,14 +233,19 @@ Polymer
 		# call: set_pinNewPosition
 		@_set_pinNewPosition(pinMarginArray)
 
+	# set for each element new position, top and left.
+	# set the total height for wrap element
 	_set_pinNewPosition : (array) ->
 		# set vars
-		cell = @.querySelectorAll('.paper-pull--builded--cell')
+		arrayTop = []
+		arrayHeight = []
+		arraySum = []
 		wrap = @.querySelector('.paper-pull--builded--wrap')
+		cell = @.querySelectorAll('.paper-pull--builded--cell')
 		wrapWidth = wrapWidth = wrap.clientWidth
-		pinWidth = if @_get_nodeValue(@_get_component(), 0, 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinwidth') else @_set_defaultValue('pinWidth')
-		pinMargin = if @_get_nodeValue(@_get_component(), 0, 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinspace') else @_set_defaultValue('pinMargin')
-		centeredMode = @_get_nodeValue(@_get_component(), 0, 'centered')
+		pinWidth = if @_get_nodeValue(@_get_component(), 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 'pinwidth') else @_set_defaultValue('pinWidth')
+		pinMargin = if @_get_nodeValue(@_get_component(), 'pinspace') then parseFloat @_get_nodeValue(@_get_component(), 'pinspace') else @_set_defaultValue('pinMargin')
+		centeredMode = @_get_nodeValue(@_get_component(), 'centered')
 
 		# set var spaceLeft
 		if centeredMode != null and centeredMode != undefined and centeredMode != 'false'
@@ -188,6 +260,9 @@ Polymer
 			# get element height
 			height = c.clientHeight
 
+			# set element height
+			width = if @_get_nodeValue(@_get_component(), 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 'pinwidth') else @_set_defaultValue('pinWidth')
+
 			# get min array value
 			min = @_get_minValueInArray(array)
 
@@ -197,15 +272,37 @@ Polymer
 			# set new left + new top position
 			c.style.left = @_get_pinLeftPosition(index, spaceLeft) + 'px'
 			c.style.top = min + 'px'
+			c.style.width = width + 'px'
 
 			array[index] = min + height + pinMargin
 
-	_set_attributeCollection: (index) ->
+			# fill arrays for max top position
+			# and relative height element
+			arrayTop.push min
+			arrayHeight.push height
+
+		# find top of last items [by count value]
+		sliceTop = arrayTop.slice((arrayTop.length - count), arrayTop.length)
+
+		# find height of last items [by count value]
+		sliceHeight = arrayHeight.slice((arrayHeight.length - count), arrayHeight.length)
+
+		for node, index in sliceTop
+			arraySum.push sliceTop[index] + sliceHeight[index]
+
+		maxSum = Math.max.apply(null, arraySum)
+
+		#[maxSum] + [margin]
+		wrap.style.height = maxSum + pinMargin + 'px' ;
+
+	# set a collection of attributes
+	# to use it in pin build
+	_set_attributeCollection: (node) ->
 		# set vars
 		arr = []
 
 		# get parameters
-		parameters = @_get_nodeValue(@_get_pins(), index)
+		parameters = node
 
 		# iterate obj
 		Object.getOwnPropertyNames(parameters).forEach (val, idx, array) ->
@@ -220,33 +317,20 @@ Polymer
 
 		return arr
 
-	_set_nodesValues: (obj) ->
-		# set vars
-		arr = []
-
-		# iterate pins
-		for el, index in obj
-
-			# get attributes
-			attrs = @_get_allAttributes(el)
-
-			# fill array arr[]
-			arr.push @_get_allAttributeValues(attrs)
-
-		return arr
-
+	_set_attribute: (objs, prop, value) ->
+		for obj in objs
+			obj.setAttribute prop value
 
 	#------------------
 	# ---- all build fn
 	# -----------------
 
 	# STEP 1. CREATE WRAPPER
-	_build_structureWrap: ->
+	_build_structureWrap: (parsedJson) ->
+
 		# set vars
 		component = this
-		pins = @_get_pins()
-		maxWidth = if @_get_nodeValue(@_get_component(), 0, 'wrapwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'wrapwidth') else @_get_windowWidth()
-
+		maxWidth = if @_get_nodeValue(@_get_component(), 'wrapwidth') then parseFloat @_get_nodeValue(@_get_component(), 'wrapwidth') else @_get_windowWidth()
 
 		# build wrap
 		# tag: section
@@ -273,16 +357,16 @@ Polymer
 					}
 				)
 
-
 		# build pin
 		# tag: li
 		# class: paper-pull--builded--cell
-		for el, index in pins
+		for node, index in parsedJson
+
 			# set vars
-			type = el.tagName.toLowerCase()
+			type = node.tagName
 
 			# get pin width
-			width = if @_get_nodeValue(@_get_component(), 0, 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 0, 'pinwidth') else @_set_defaultValue('pinWidth')
+			width = if @_get_nodeValue(@_get_component(), 'pinwidth') then parseFloat @_get_nodeValue(@_get_component(), 'pinwidth') else @_set_defaultValue('pinWidth')
 
 			# build pin
 			# tag: section
@@ -291,8 +375,8 @@ Polymer
 			pin = @_build_element(
 					obj = {
 						type : 'li',
-						classes : [['paper-pull--builded--cell']],
-						styles : [['width', width + 'px']]
+						classes : [['paper-pull--builded--cell']]
+						#styles : [['width', width + 'px']]
 					}
 				)
 
@@ -319,10 +403,10 @@ Polymer
 			customType = '_build_' + type
 
 			# add customType to article
-			article.appendChild @[customType](pin, index, type)
+			article.appendChild @[customType](pin, node)
 
 			# set class when all pins are loaded
-			if index == (pins.length - 1)
+			if index == (parsedJson.length - 1)
 				@.setAttribute('class', 'loaded')
 
 			# add list to wrap
@@ -331,19 +415,12 @@ Polymer
 			# add wrap to component
 			@.appendChild wrap
 
-		# temp fn to solve
-		# repositioning
-		# setTimeout (->
-		# 	# set pins position
-		# 	component._set_pinConfPosition()
-		# 	return
-		# ), 200
-
 	# STEP 2. CREATE CUSTOM TAG CONTENT [div, figure, iframe]
 	# 1. default
-	_build_text: (pin, index, type) ->
+	_build_default: (pin, node, type) ->
 		# set vars
 		component = this
+		type = @_get_nodeValue(node , 'tagName')
 
 		# build custom tag
 		# tag: div
@@ -357,27 +434,25 @@ Polymer
 
 		# if related header exist
 		# add it to custom tag
-		header = @_build_relatedContent('header', index, 'header')
+		header = @_build_relatedContent('header', node, 'header')
 		if header
 			tag.appendChild header
 
 		# if related description exist
 		# add it to custom tag
-		description = @_build_relatedContent('description', index, 'p')
+		description = @_build_relatedContent('description', node, 'p')
 		if description
 			tag.appendChild description
-
-			# set pins position
-			component._set_pinConfPosition()
 
 		return tag
 
 	# 2. image:
-	_build_picture: (pin, index, type) ->
+	_build_picture: (pin, node) ->
 		# set vars
 		component = this
-		ariaLabelLedBy =  @_get_nodeValue(@_get_pins(), index, 'aria-labelledby')
-		src = @_get_nodeValue(@_get_pins(), index, 'src')
+		ariaLabelLedBy =  @_get_nodeValue(node , 'aria-labelledby')
+		src = @_get_nodeValue(node, 'src')
+		type = @_get_nodeValue(node , 'tagName')
 
 		# build custom tag
 		# tag: figure
@@ -392,23 +467,23 @@ Polymer
 				)
 
 		# remove attribute
-		@_remove_attributes(@_get_pin(index), 'aria-labelledby')
+		@_remove_node(node, 'aria-labelledby')
 
 		# if related header exist
 		# add it to custom tag
-		header = @_build_relatedContent('header', index, 'header')
+		header = @_build_relatedContent('header', node, 'header')
 		if header
 			tag.appendChild header
 
 
 		# if related description exist
 		# add it to custom tag
-		description = @_build_relatedContent('description', index, 'figcaption')
+		description = @_build_relatedContent('description', node, 'figcaption')
 		if description
 			tag.appendChild description
 
 		# store content in var
-		content = @_build_content(index, type)
+		content = @_build_content(node)
 
 		# asynchronous load image
 		# set vars
@@ -418,12 +493,14 @@ Polymer
 		newImg.onload = ->
 			content.src = this.src
 
-			# set pins position
-			# with little delay
-			setTimeout ( ->
-				component._set_pinConfPosition()
-				return
-			), 400
+			# get mobile version
+			if component._get_responsive()
+				# set pins position
+				# with little delay
+				setTimeout ( ->
+					component._set_pinConfPosition()
+					return
+				), 400
 
 		# set dynamic source image
 		newImg.src = src
@@ -432,11 +509,11 @@ Polymer
 		tag.appendChild content
 
 		# check if node href exist to put a link
-		if @_get_nodeValue(@_get_pins(), index, 'href')
+		if @_get_nodeValue(node, 'href')
 			anchor = @_build_element(
 						obj = {
 							type : 'a',
-							attributes: [['href', @_get_nodeValue(@_get_pins(), index, 'href')], ['target', '_blank']]
+							attributes: [['href', @_get_nodeValue(node, 'href')], ['target', '_blank']]
 						}
 					)
 
@@ -449,12 +526,13 @@ Polymer
 		return tag
 
 	# 3. video youtube:
-	_build_youtube: (pin, index, type) ->
+	_build_youtube: (pin, node) ->
 		# set vars
 		component = @
-		url = @_get_nodeValue(@_get_pins(), index, 'video')
+		type = @_get_nodeValue(node , 'tagName')
+		url = @_get_nodeValue(node, 'video')
 		newUrl = url.replace('/watch?v=', '/embed/')
-		ariaLabelLedBy =  @_get_nodeValue(@_get_pins(), index, 'aria-labelledby')
+		ariaLabelLedBy =  @_get_nodeValue(node, 'aria-labelledby')
 
 		# check url type
 		if url.indexOf('youtube.com/watch?v=') > -1
@@ -492,29 +570,35 @@ Polymer
 
 	# STEP 3. CREATE EACH CONTENT
 	# fill custom case content
-	_build_content: (index, type) ->
+	_build_content: (node) ->
+		# set vars
+		type = @_get_nodeValue(node , 'tagName')
+
+		# remove attribute
+		@_remove_node(node, 'tagName')
+
 		# build custom content
 		# tag: [custom]
 		# attributes: [collection of attributes]
 		tag = @_build_element(
 					obj = {
 						type : @_replace_tag(type),
-						attributes : @_set_attributeCollection(index)
+						attributes : @_set_attributeCollection(node)
 					}
 				)
 
 		return tag
 
 	# STEP 4. CREATE RELATED CONTENT
-	_build_relatedContent: (type, index, tag) ->
+	_build_relatedContent: (type, node, tag) ->
 		fn = '_build_related_' + type
-		@[fn](type, index, tag)
+		@[fn](type, node, tag)
 
 	# 4.1 CREATE RELATED HEADER [title, claim]
-	_build_related_header: (type, index, tag) ->
+	_build_related_header: (type, node, tag) ->
 
 		# check if title || claim exist
-		if @_get_nodeValue(@_get_pins(), index, 'title') || @_get_nodeValue(@_get_pins(), index, 'claim')
+		if @_get_nodeValue(node, 'title') || @_get_nodeValue(node, 'claim')
 
 			# build custom tag
 			# tag: header
@@ -527,7 +611,7 @@ Polymer
 			)
 
 			# check if title exist
-			if @_get_nodeValue(@_get_pins(), index, 'title')
+			if @_get_nodeValue(node, 'title')
 
 				# build custom tag
 				# tag: h2
@@ -537,7 +621,7 @@ Polymer
 					obj = {
 						type : 'h2',
 						classes : [['paper-pull--short--title']],
-						content : @_get_nodeValue(@_get_pins(), index, 'title')
+						content : @_get_nodeValue(node, 'title')
 					}
 				)
 
@@ -545,10 +629,10 @@ Polymer
 				header.appendChild (el)
 
 				# remove attribute title
-				@_remove_attributes(@_get_pin(index), 'title')
+				@_remove_node(node, 'title')
 
 			# check if claim exist
-			if @_get_nodeValue(@_get_pins(), index, 'claim')
+			if @_get_nodeValue(node, 'claim')
 
 				# build custom tag
 				# tag: h2
@@ -558,7 +642,7 @@ Polymer
 					obj = {
 						type : 'h3',
 						classes : [['paper-pull--short--claim']],
-						content : @_get_nodeValue(@_get_pins(), index, 'claim')
+						content : @_get_nodeValue(node, 'claim')
 					}
 				)
 
@@ -566,15 +650,15 @@ Polymer
 				header.appendChild (el)
 
 				# remove attribute claim
-				@_remove_attributes(@_get_pin(index), 'claim')
+				@_remove_node(node, 'claim')
 
 			return header
 		else
 			return false
 
 	# 4.2 CREATE RELATED DESCRIPTION [description]
-	_build_related_description: (type, index, tag) ->
-		if @_get_nodeValue(@_get_pins(), index, 'description')
+	_build_related_description: (type, node, tag) ->
+		if @_get_nodeValue(node, 'description')
 
 			# build custom tag
 			# tag: [tag]
@@ -584,12 +668,12 @@ Polymer
 				obj = {
 					type : tag,
 					classes : [['paper-pull--short--' + type]],
-					content : @_get_nodeValue(@_get_pins(), index, 'description')
+					content : @_get_nodeValue(node, 'description')
 				}
 			)
 
 			# remove attribute description
-			@_remove_attributes(@_get_pin(index), 'description')
+			@_remove_node(node, 'description')
 
 			return description
 		else
@@ -644,17 +728,31 @@ Polymer
 	#------------------
 	# ---- all remove fn
 	# -----------------
-	_remove_attributes: (pin, attr) ->
+	_remove_node: (node, prop) ->
 		# remove chooses attributes
-		pin.removeAttribute(attr)
+		delete node[prop]
+
+	_remove_attr: (objs, attr) ->
+		for obj in objs
+    		obj.removeAttribute(attr);
 
 	# -----------------
 	# ---- all events
 	# -----------------
 
 	attached: ->
-		@_build_structureWrap()
-		#@_test()
+		# set vars
+		component = this
+
+		# load external value to
+		# build all pins
+		@_get_externalFile(@_get_nodeValue(@_get_component(), 'source'), (response) ->
+				# get json nodes
+				json = JSON.parse response
+
+				# build structure
+				component._build_structureWrap(json.pins)
+			)
 
 	ready: ->
 
@@ -663,8 +761,24 @@ Polymer
 	_onResize: ->
 		# set vars
 		component = this
-		if component.classList.contains('loaded')
-			@_set_pinConfPosition()
+
+		console.log @_get_responsive()
+
+		# check device width
+		if @_get_responsive()
+			# check if all pins are loaded
+			if component.classList.contains('loaded')
+
+				# set pin config
+				# to their positioning
+				@_set_pinConfPosition()
+		else
+			# set vars
+			cell = @.querySelectorAll('.paper-pull--builded--cell')
+
+			# remove attr style to cell
+			# for responsive version
+			@_remove_attr(cell, 'style')
 
 	#------------------
 	# ---- test
@@ -672,42 +786,9 @@ Polymer
 	_test : ->
 		component = []
 		component.push @
-		@_get_externalFile("object.json", (response) -> 
+		@_get_externalFile(@_get_nodeValue(@_get_component(), 'source'), (response) ->
 			json = JSON.parse response
 			return json.pins[0])
 		#@_build_structureWrap()
 		#@_get_nodeValue(@_get_pins(), 0, 'jjj')
-
-
-	# ------------------- temp ------------------------
-	_get_externalFile: (file, fn) ->
-		# set vars
-		component = this
-		xmlhttp = new XMLHttpRequest()
-
-		xmlhttp.onreadystatechange = ->
-			if xmlhttp.readyState == 4
-
-				# status ok
-				if xmlhttp.status == 200
-					if typeof fn == 'function'
-						# pass the result to custom fn
-                		fn xmlhttp.responseText ;
-
-				# status 'not found'
-				else if xmlhttp.status == 400
-					console.log 'not found'
-
-				# status 'error'
-				else
-					console.log 'error'
-			return
-
-		xmlhttp.open("GET", file, true);
-		xmlhttp.send();
-
-		return xmlhttp
-
-
-	# -------------------------------------------------
 
